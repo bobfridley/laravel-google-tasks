@@ -1,0 +1,42 @@
+{
+    "name": "bobfridley/laravel-google-task",
+    "description": "Manage Google Tasks",
+    "keywords": [
+        "bobfridley",
+        "laravel-google-tasks"
+    ],
+    "homepage": "https://github.com/bobfridley/laravel-google-tasks",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Bob Fridley",
+            "email": "robert.fridley@gmail.com",
+            "homepage": "",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php" : "^7.0",
+        "google/apiclient": "^1.1.7",
+        "illuminate/support": "^5.2.8",
+        "nesbot/carbon": "^1.21"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^5.3.4",
+        "orchestra/testbench": "^3.2",
+        "mockery/mockery": "^0.9.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "BobFridley\\GoogleTasks\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "BobFridley\\GoogleTasks\\Test\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit"
+    }
+}
