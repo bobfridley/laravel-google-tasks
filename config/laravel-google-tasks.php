@@ -8,8 +8,8 @@ return [
     'client_secret_json' => storage_path('app/laravel-google-tasks/client_secret.json'),
 
     /**
-     *  The id of the Google Task that will be used by default.
+     *  The list_id of Google Tasks that will be used by default.
      */
-    'task_id' => '',
+    'list_id' => '',
     
 ];

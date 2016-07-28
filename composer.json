@@ -2,6 +2,14 @@
     "name": "bobfridley/laravel-google-task",
     "description": "Manage Google Tasks",
     "keywords": [
+        "laravel",
+        "framework",
+        "Google Tasks",
+        "GoogleTasks",
+        "Bob Fridley",
+        "BobFridley"
+    ],
+    "keywords": [
         "bobfridley",
         "laravel-google-tasks"
     ],
@@ -38,5 +46,15 @@
     },
     "scripts": {
         "test": "vendor/bin/phpunit"
-    }
+    },
+    "config": {
+        "preferred-install": "dist"
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0-dev"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": false
 }

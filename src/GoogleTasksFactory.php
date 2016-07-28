@@ -7,7 +7,7 @@ use Google_Service_Tasks;
 
 class GoogleTasksFactory
 {
-    public static function createForTaskList($taskId): GoogleTasks
+    public static function createForTaskList($listId): GoogleTasks
     {
         $config = config('laravel-google-tasks');
 
@@ -22,6 +22,6 @@ class GoogleTasksFactory
 
         $service = new Google_Service_Tasks($client);
 
-        return new GoogleTasks($service, $taskId);
+        return new GoogleTasks($service, $listId);
     }
 }

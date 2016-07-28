@@ -5,7 +5,8 @@ namespace BobFridley\GoogleTasks;
 use Carbon\Carbon;
 use DateTime;
 use Google_Service_Tasks;
-//use Google_Service_Tasks_Tasklists_Resource;
+use Google_Service_Tasks_TaskLists;
+use Google_Service_Tasks_TaskList;
 
 class GoogleTasks
 {
@@ -13,114 +14,130 @@ class GoogleTasks
     protected $tasksService;
 
     /** @var string */
+    protected $listId;
+
+    /** @var string */
     protected $taskId;
 
-    public function __construct(Google_Service_Tasks $tasksService, $taskId)
+    public function __construct(Google_Service_Tasks $tasksService, $listId)
     {
         $this->tasksService = $tasksService;
 
-        $this->taskId = $taskId;
+        $this->listId = $listId;
     }
 
-    public function getTaskList(): string
+    public function getListId(): string
     {
-        return $this->taskId;
+        return $this->id;
+    }
+
+    public function getTaskId(): string
+    {
+        return $this->id;
     }
 
     /**
-     * @param \Carbon\Carbon $startDateTime
-     * @param \Carbon\Carbon $endDateTime
-     * @param array          $queryParameters
+     * Get task lists
      *
-     * @link https://developers.google.com/google-apps/calendar/v3/reference/events/list
+     * @param \Carbon\Carbon $maxResults
+     *
+     * @link https://developers.google.com/google-apps/tasks/v1/reference/tasks/list
      *
      * @return array
      */
-    /*public function listEvents(
-        Carbon $startDateTime = null,
-        Carbon $endDateTime = null,
+    public function listTasks(
+        Carbon $dueMin = null,
         array $queryParameters = []
     ): array {
-        $parameters = ['singleEvents' => true];
+        $parameters = [
+            'maxResults' => 100,
+            'showCompleted' => true,
+            'showDeleted' => true,
+            'showHidden' => true,
+        ];
 
-        if (is_null($startDateTime)) {
-            $startDateTime = Carbon::now()->startOfDay();
+        if (is_null($dueMin)) {
+            $dueMin = Carbon::now()->startOfDay();
         }
 
-        $parameters['timeMin'] = $startDateTime->format(DateTime::RFC3339);
-
-        if (is_null($endDateTime)) {
-            $endDateTime = Carbon::now()->addYear()->endOfDay();
-        }
-        $parameters['timeMax'] = $endDateTime->format(DateTime::RFC3339);
+        $parameters['dueMin'] = $dueMin->format(DateTime::RFC3339);
 
         $parameters = array_merge($parameters, $queryParameters);
 
         return $this
-            ->calendarService
-            ->events
-            ->listEvents($this->calendarId, $parameters)
+            ->tasksService
+            ->listTasks($this->listId, $parameters)
             ->getItems();
-    }*/
+    }
 
     /**
-     * Get a single event.
+     * Get a single task.
      *
-     * @param string $eventId
+     * @param string $taskId
      *
-     * @return \Google_Service_Calendar_Event
+     * @link https://developers.google.com/google-apps/tasks/v1/reference/tasks/get
+     *
+     * @return \Google_Service_Tasks_TaskList
      */
-    /*public function getEvent(string $eventId): Google_Service_Calendar_Event
+    public function getTask(string $taskId): Google_Service_Tasks_TaskList
     {
-        return $this->calendarService->events->get($this->calendarId, $eventId);
-    }*/
+        return $this->tasksService->tasks->get($this->listId, $taskId);
+    }
 
     /**
-     * Insert an event.
+     * Insert a task.
      *
-     * @param \Spatie\GoogleCalendar\Event|Google_Service_Calendar_Event $event
+     * @param \BobFridley\GoogleTasks\Tasks|Google_Service_Tasks $task
      *
-     * @link https://developers.google.com/google-apps/calendar/v3/reference/events/insert
+     * @link https://developers.google.com/google-apps/tasks/v1/reference/tasks/delete
      *
-     * @return \Google_Service_Calendar_Event
+     * @return \Google_Service_Tasks
      */
-    /*public function insertEvent($event): Google_Service_Calendar_Event
+    public function insertTask($task): Google_Service_Tasks
     {
-        if ($event instanceof Event) {
-            $event = $event->googleEvent;
+        if ($task instanceof Tasks) {
+            $task = $task->googleTasks;
         }
 
-        return $this->calendarService->events->insert($this->calendarId, $event);
-    }*/
+        return $this->tasksService->task->insert($this->listId, $task);
+    }
 
     /**
-     * @param \Spatie\GoogleCalendar\Event|Google_Service_Calendar_Event $event
+     * Update a task
      *
-     * @return \Google_Service_Calendar_Event
+     * @param \BobFridley\GoogleTasks\Tasks|Google_Service_Tasks $tasks
+     *
+     * @link https://developers.google.com/google-apps/tasks/v1/reference/tasks/update
+     *
+     * @return \Google_Service_Tasks
      */
-    /*public function updateEvent($event): Google_Service_Calendar_Event
+    public function updateTask($task): Google_Service_Tasks
     {
-        if ($event instanceof Event) {
-            $event = $event->googleEvent;
+        if ($task instanceof Tasks) {
+            $task = $task->googleTasks;
         }
 
-        return $this->calendarService->events->update($this->calendarId, $event->id, $event);
-    }*/
+        return $this->tasksService->task->update($this->listId, $task->id, $task);
+    }
 
     /**
-     * @param string|\Spatie\GoogleCalendar\Event $eventId
+     * Delete a task
+     *
+     * @param string|\BobFridley\GoogleTasks\Tasks $taskId
+     *
+     * @link https://developers.google.com/google-apps/tasks/v1/reference/tasks/delete
      */
-    /*public function deleteEvent($eventId)
+    public function deleteTask($taskId)
     {
-        if ($eventId instanceof Event) {
-            $eventId = $eventId->id;
+        if ($taskId instanceof Tasks) {
+            $taskId = $taskId->id;
         }
 
-        $this->calendarService->events->delete($this->calendarId, $eventId);
-    }*/
+        $this->tasksService->tasks->delete($this->listId, $taskId);
+    }
 
-    /*public function getService(): Google_Service_Calendar
+    public function getService(): Google_Service_Tasks
     {
-        return $this->calendarService;
-    }*/
+        return $this->tasksService;
+    }
 }
