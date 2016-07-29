@@ -39,7 +39,8 @@ class GoogleTasks
     /**
      * Get task lists
      *
-     * @param \Carbon\Carbon $maxResults
+     * @param \Carbon\Carbon $dueMin
+     * @param Array          $$queryParameters
      *
      * @link https://developers.google.com/google-apps/tasks/v1/reference/tasks/list
      *
