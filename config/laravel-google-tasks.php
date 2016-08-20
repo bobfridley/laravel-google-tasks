@@ -5,11 +5,21 @@ return [
     /**
      * Path to a json file containing the credentials of a Google Service account.
      */
-    'client_secret_json' => storage_path('app/laravel-google-tasks/client_secret.json'),
+    'client_secret_json' => storage_path('client_secret.json'),
 
     /**
-     *  The list_id of Google Tasks that will be used by default.
+     * Path to a private_key file.
      */
-    'list_id' => '',
+    'private_key' => storage_path('private_key.p12'),
+
+    /**
+     * Client email.
+     */
+    'client_email' => 'client_email',
     
+    /**
+     * User to impersonate.
+     */
+    'user_to_impersonate' => 'user_to_impersonate',
+ 
 ];

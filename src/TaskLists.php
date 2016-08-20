@@ -4,44 +4,39 @@ namespace BobFridley\GoogleTasks;
 
 use Carbon\Carbon;
 use DateTime;
-use Google_Service_Tasks_Task;
+use Google_Service_Tasks_TaskList;
+use Google_Service_Tasks_TaskLists;
 use Illuminate\Support\Collection;
 
-class Tasks
+class TaskLists
 {
-    /** @var Google_Service_Tasks_Task */
-    public $googleTasks;
+    /** @var Google_Service_Tasks_TaskLists */
+    public $googleTaskLists;
 
     /** @var string */
     protected $taskListId;
-
-    /** @var int */
-    protected $taskId;
 
     /**
      * [__construct description]
      */
     public function __construct()
     {
-        $this->googleTasks = new Google_Service_Tasks_Task();
+        $this->googleTaskLists = new Google_Service_Tasks_TaskLists();
     }
 
     /**
-     * [createFromGoogleTasks description]
+     * [createFromGoogleTaskLists description]
      * 
-     * @param  Google_Service_Tasks_Task $googleTasks [description]
-     * @param  [type]                    $taskListId  [description]
-     * @return [type]                                 [description]
+     * @param  Google_Service_Tasks_TaskList $googleTaskLists [description]
+     * @return [type]                                         [description]
      */
-    public static function createFromGoogleTasks(Google_Service_Tasks_Task $googleTasks, $taskListId)
+    public static function createFromGoogleTaskLists(Google_Service_Tasks_TaskList $googleTaskLists)
     {
-        $tasks = new static();
+        $tasklists = new static();
 
-        $tasks->googleTasks = $googleTasks;
+        $tasklists->googleTaskLists = $googleTaskLists;
 
-        $tasks->taskListId = $taskListId;
-
-        return $tasks;
+        return $tasklists;
     }
 
     /**
@@ -65,8 +60,8 @@ class Tasks
     }
 
     /**
-     * [__get description]
-     * 
+     *  * [__get description]
+     *  
      * @param string $name
      *
      * @return mixed
@@ -75,9 +70,9 @@ class Tasks
     {
         $name = $this->getFieldName($name);
 
-        $value = array_get($this->googleTasks, $name);
+        $value = array_get($this->googleTaskLists, $name);
 
-        if (in_array($name, ['due', 'updated']) && $value) {
+        if (in_array($name, ['updated']) && $value) {
             $value = new Carbon($value, 'America/New_York');
             // $value->setTimezone($value->getTimezone());
         }
@@ -95,13 +90,13 @@ class Tasks
     {
         $name = $this->getFieldName($name);
 
-        if (in_array($name, ['due', 'updated'])) {
+        if (in_array($name, ['updated'])) {
             $this->setDateProperty($name, $value);
 
             return;
         }
 
-        array_set($this->googleTasks, $name, $value);
+        array_set($this->googleTaskLists, $name, $value);
     }
 
     /**
@@ -115,6 +110,8 @@ class Tasks
     }
 
     /**
+     * [get description]
+     * 
      * @param string      $maxResults
      * @param string|null $pageToken
      * @param string      $fields
@@ -123,19 +120,16 @@ class Tasks
      * @return \Illuminate\Support\Collection
      */
     public static function get(
-        Carbon  $dueMin = null,
-        array $queryParameters = [],
-        string $taskListId = null
     ): Collection {
-        $googleTaskList = static::getGoogleTaskList($taskListId);
-        $googleTasks = $googleTaskList->listTasks($taskListId, $dueMin, $queryParameters);
+        $googleTaskLists = static::getGoogleTaskLists();
+        $googleLists = $googleTaskLists->listTaskLists();
 
-        return collect($googleTasks)
-            ->map(function (Google_Service_Tasks_Task $task) use ($taskListId) {
-                return Tasks::createFromGoogleTasks($task, $taskListId);
+        return collect($googleLists)
+            ->map(function (Google_Service_Tasks_TaskList $tasklist) {
+                return TaskLists::createFromGoogleTaskLists($tasklist);
             })
-            ->sortBy(function (Tasks $task) {
-                return $task->due;
+            ->sortBy(function (TaskLists $tasklist) {
+                return $tasklist->title;
             })
             ->values();
     }
@@ -148,13 +142,13 @@ class Tasks
      *
      * @return \BobFridley\GoogleTasks\Tasks
      */
-    public static function find($tasklist, $taskId = null): Tasks
+    public static function find($tasklist, $taskId = null): TaskLists
     {
         $service = static::getGoogleTasks($tasklist);
 
         $googleTasks = $service->getTask($taskId);
 
-        return static::createFromGoogleTasks($googleTasks, $taskId);
+        return static::createFromGoogleTaskLists($googleTasks, $taskId);
     }
 
     /**
@@ -162,7 +156,7 @@ class Tasks
      * 
      * @return [type] [description]
      */
-    public function save(): Tasks
+    public function save(): TaskLists
     {
         $method = $this->exists() ? 'updateTask' : 'insertTask';
 
@@ -170,30 +164,24 @@ class Tasks
 
         $googleTasks = $service->$method($this);
 
-        return static::createFromGoogleTasks($googleTasks, $service->getTaskList());
+        return static::createFromGoogleTaskLists($googleTasks, $service->getTaskList());
     }
 
     /**
      * [delete description]
      * 
-     * @param string $taskId
+     * @param string $taskListId
      */
-    public function delete(string $taskId = null)
+    public function delete(string $taskListId = null)
     {
         $this->getGoogleTasks($this->taskId)->deleteTask($taskId ?? $this->id);
     }
 
     /**
-     * [getGoogleTaskList description]
-     * 
-     * @param string $taskListId|null
-     *
      * @return \BobFridley\GoogleTasks\GoogleTasks
      */
-    protected static function getGoogleTaskList($taskListId = null)
+    protected static function getGoogleTaskLists($taskListId = null)
     {
-        $taskListId = $taskListId ?? config('laravel-google-tasks.tasklist');
-
         return GoogleTasksFactory::createForTaskLists($taskListId);
     }
 
@@ -205,10 +193,6 @@ class Tasks
      */
     protected function setDateProperty(string $name, Carbon $date)
     {
-        if (str_is('due', $name)) {
-            $this->googleTasks->setDue($date);
-        }
-
         if (str_is('updated', $name)) {
             $this->googleTasks->setUpdated($date);
         }
@@ -218,20 +202,16 @@ class Tasks
      * [getFieldName description]
      * 
      * @param  string $name [description]
-     * 
      * @return [type]       [description]
      */
     protected function getFieldName(string $name): string
     {
         return [
+            'kind'     => 'kind',
             'id'       => 'id',
-            'parent'   => 'parent',
-            'position' => 'position',
             'title'    => 'title',
             'updated'  => 'updated',
-            'notes'    => 'notes',
-            'status'   => 'status',
-            'due'      => 'due'
+            'selfLink' => 'selfLink',
         ][$name] ?? $name;
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace BobFridley\GoogleTask;
+namespace BobFridley\GoogleTasks;
 
 use Illuminate\Support\Facades\Facade;
 

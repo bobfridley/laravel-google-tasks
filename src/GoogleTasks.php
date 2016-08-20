@@ -5,55 +5,107 @@ namespace BobFridley\GoogleTasks;
 use Carbon\Carbon;
 use DateTime;
 use Google_Service_Tasks;
-use Google_Service_Tasks_TaskLists;
-use Google_Service_Tasks_TaskList;
 
 class GoogleTasks
 {
     /** @var \Google_Service_Tasks */
-    protected $tasksService;
+    protected $taskService;
 
     /** @var string */
-    protected $listId;
+    protected $taskListId;
 
     /** @var string */
     protected $taskId;
 
-    public function __construct(Google_Service_Tasks $tasksService, $listId)
+    /**
+     * [__construct description]
+     * 
+     * @param Google_Service_Tasks $taskService
+     * @param string               $taskListId
+     */
+    public function __construct(Google_Service_Tasks $taskService, $taskListId)
     {
-        $this->tasksService = $tasksService;
+        $this->taskService = $taskService;
 
-        $this->listId = $listId;
-    }
-
-    public function getListId(): string
-    {
-        return $this->id;
-    }
-
-    public function getTaskId(): string
-    {
-        return $this->id;
+        $this->taskListId = $taskListId;
     }
 
     /**
-     * Get task lists
+     * [getTaskListId description]
+     * 
+     * @return [type] [description]
+     */
+    public function getTaskListId(): string
+    {
+        return $this->taskListId;
+    }
+
+    /**
+     * [getTaskId description]
+     * 
+     * @return [type] [description]
+     */
+    public function getTaskId(): string
+    {
+        return $this->taskId;
+    }
+
+    /**
+     * Get all task lists
      *
-     * @param \Carbon\Carbon $maxResults
+     * @param string $maxResults  Maximum number of task lists returned on one page. Optional. The default is 100.
+     * @param string $pageToken   Token specifying the result page to return. Optional.
+     * @param string $fields      Which fields to include in a partial response.
+     * 
+     * @link https://developers.google.com/google-apps/tasks/v1/reference/tasklists/list
+     *
+     * @return array
+     */
+    public function listTasklists(
+        array $queryParameters = []
+    ): array {
+        $parameters = [
+            'maxResults' => 100,
+        ];
+
+        $parameters = array_merge($parameters, $queryParameters);
+
+        return $this
+            ->taskService
+            ->tasklists
+            ->listTasklists($parameters)
+            ->getItems();
+    }
+
+    /**
+     * Get task from specified list
+     *
+     * @param string               $taskListId      Task list identifier.
+     * @param \Carbon\Carbon|null  $completedMax    Upper bound for a task's completion date (as a RFC 3339 timestamp) to filter by. Optional.
+     * @param \Carbon\Carbon|null  $completedMin    Lower bound for a task's completion date (as a RFC 3339 timestamp) to filter by. Optional.
+     * @param \Carbon\Carbon|null  $dueMax          Upper bound for a task's due date (as a RFC 3339 timestamp) to filter by. Optional.
+     * @param \Carbon\Carbon|null  $dueMin          Lower bound for a task's due date (as a RFC 3339 timestamp) to filter by. Optional.
+     * @param string               $maxResults      Maximum number of task lists returned on one page. Optional. The default is 100.
+     * @param string               $pageToken       Token specifying the result page to return. Optional.
+     * @param boolean              $showCompleted   Flag indicating whether completed tasks are returned in the result. Optional. The default is True.
+     * @param boolean              $showDeleted     Flag indicating whether deleted tasks are returned in the result. Optional. The default is False.
+     * @param boolean              $showHidden      Flag indicating whether hidden tasks are returned in the result. Optional. The default is False.
+     * @param \Carbon\Carbon|null  $updatedMin      Lower bound for a task's last modification time (as a RFC 3339 timestamp) to filter by. Optional.
+     * @param string               $fields          Selector specifying which fields to include in a partial response.
      *
      * @link https://developers.google.com/google-apps/tasks/v1/reference/tasks/list
      *
      * @return array
      */
     public function listTasks(
+        string $taskListId,
         Carbon $dueMin = null,
         array $queryParameters = []
     ): array {
         $parameters = [
-            'maxResults' => 100,
-            'showCompleted' => true,
-            'showDeleted' => true,
-            'showHidden' => true,
+            'showCompleted' => false,
+            'showDeleted'   => true,
+            'showHidden'    => true,
         ];
 
         if (is_null($dueMin)) {
@@ -65,8 +117,9 @@ class GoogleTasks
         $parameters = array_merge($parameters, $queryParameters);
 
         return $this
-            ->tasksService
-            ->listTasks($this->listId, $parameters)
+            ->taskService
+            ->tasks
+            ->listTasks($taskListId, $parameters)
             ->getItems();
     }
 
@@ -77,11 +130,11 @@ class GoogleTasks
      *
      * @link https://developers.google.com/google-apps/tasks/v1/reference/tasks/get
      *
-     * @return \Google_Service_Tasks_TaskList
+     * @return \Google_Service_Tasks
      */
-    public function getTask(string $taskId): Google_Service_Tasks_TaskList
+    public function getTask(string $taskId): Google_Service_Tasks
     {
-        return $this->tasksService->tasks->get($this->listId, $taskId);
+        return $this->service->tasks->get($this->tasklist, $taskId);
     }
 
     /**
@@ -89,7 +142,7 @@ class GoogleTasks
      *
      * @param \BobFridley\GoogleTasks\Tasks|Google_Service_Tasks $task
      *
-     * @link https://developers.google.com/google-apps/tasks/v1/reference/tasks/delete
+     * @link https://developers.google.com/google-apps/tasks/v1/reference/tasks/insert
      *
      * @return \Google_Service_Tasks
      */
@@ -99,13 +152,13 @@ class GoogleTasks
             $task = $task->googleTasks;
         }
 
-        return $this->tasksService->task->insert($this->listId, $task);
+        return $this->service->tasks->insert($this->tasklist, $task);
     }
 
     /**
      * Update a task
      *
-     * @param \BobFridley\GoogleTasks\Tasks|Google_Service_Tasks $tasks
+     * @param \BobFridley\GoogleTasks\Tasks|Google_Service_Tasks $task
      *
      * @link https://developers.google.com/google-apps/tasks/v1/reference/tasks/update
      *
@@ -117,7 +170,7 @@ class GoogleTasks
             $task = $task->googleTasks;
         }
 
-        return $this->tasksService->task->update($this->listId, $task->id, $task);
+        return $this->service->tasks->update($this->tasklist, $task->id, $task);
     }
 
     /**
@@ -133,11 +186,16 @@ class GoogleTasks
             $taskId = $taskId->id;
         }
 
-        $this->tasksService->tasks->delete($this->listId, $taskId);
+        $this->service->tasks->delete($this->tasklist, $taskId);
     }
 
+    /**
+     * [getService description]
+     * 
+     * @return [type] [description]
+     */
     public function getService(): Google_Service_Tasks
     {
-        return $this->tasksService;
+        return $this->taskService;
     }
 }

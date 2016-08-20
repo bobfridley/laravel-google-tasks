@@ -24,10 +24,7 @@ class GoogleTasksServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__.'/../config/laravel-google-tasks.php', 'laravel-google-tasks');
 
         $this->app->bind(GoogleTasks::class, function () {
-
-            $task_id = config('laravel-google-tasks.task_id');
-
-            return GoogleTasksFactory::createForTaskList($task_id);
+            return GoogleTasksFactory::createForTaskLists();
         });
 
         $this->app->alias(GoogleTasks::class, 'laravel-google-tasks');
